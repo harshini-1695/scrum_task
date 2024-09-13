@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -26,6 +26,13 @@ const validationSchema = Yup.object({
         .min(0, 'Value must be at least 0')
         .max(100, 'Value cannot exceed 100')
         .required('This field is required'),
+    timeEstimate: Yup.string()
+        .matches(/^(?:\d+w)?(?:\s*\d+d)?(?:\s*\d+h)?$/, 'Invalid time format'),
+    version: Yup.string()
+        .max(256, 'maximum 256 characters are allowed'),
+    stepsToReproduce: Yup.string()
+        .required('This field is required'),
+    
 });
 
 const Form = () => {
@@ -60,15 +67,24 @@ const Form = () => {
     { control, handleSubmit, formState: { errors }, reset } = useForm({
       resolver: yupResolver(validationSchema),
       defaultValues: {
-        type: ticket ? ticket.type : "BUG",
-        status: ticket ? ticket.status : "BACKLOG",
-        priority: ticket ? ticket.priority : "MEDIUM",
+        type: ticket?.type || "BUG",
+        status: ticket?.status || "BACKLOG",
+        priority: ticket?.priority || "MEDIUM",
         summary: ticket?.summary || "",
         description: ticket?.description || "",
         labels: ticket?.labels || "",
-        storyPoints: ticket?.storyPoints || 0
+        storyPoints: ticket?.storyPoints || 0,
+        timeEstimate: ticket?.timeEstimate || 0,
+        acceptanceCriteria: ticket?.acceptanceCriteria || "",
+        version: ticket?.version || "",
+        stepsToReproduce: ticket?.stepsToReproduce || "",
+        expectedResult: ticket?.expectedResult || "",
+        actualResult: ticket?.actualResult || "",
+        workaround: ticket?.workaround || "",
       }
     });
+
+  const [ticketType, setType] = useState(ticket?.type || "BUG");
 
   useEffect(() => {
     if (ticket) {
@@ -104,7 +120,7 @@ const Form = () => {
               getOptionLabel={(option) => option.label}
               value={typeOptions.find(option => option.value === field.value) || null}
               isOptionEqualToValue={(option, value) => option.value === value?.value}
-              onChange={(_, value) => field.onChange(value ? value.value : '')}
+              onChange={(_, value) => {field.onChange(value ? value.value : ''); setType(value?.value)}}
               renderInput={(params) => <TextField {...params} label="Issue Type" 
                 error={Boolean(errors.type)}
                 helperText={errors.type?.message}
@@ -214,6 +230,133 @@ const Form = () => {
           )}
         />
 
+        <Controller
+          name="timeEstimate"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Time Estimate"
+              fullWidth
+              sx={{ mb: 2 }}
+              error={Boolean(errors.timeEstimate)}
+              helperText={errors.timeEstimate?.message}
+            />
+          )}
+        />
+
+        <Controller
+          name="acceptanceCriteria"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Acceptance Criteria"
+              fullWidth
+              sx={{ mb: 2 }}
+              multiline
+              rows={4}
+            />
+          )}
+        />
+
+        <Controller
+          name="testingRequirement"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Testing Requirement"
+              fullWidth
+              sx={{ mb: 2 }}
+              multiline
+              rows={4}
+            />
+          )}
+        />
+
+      {ticketType === 'BUG' && (
+      <>
+        <Controller
+          name="version"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Version"
+              fullWidth
+              sx={{ mb: 2 }}
+              multiline
+              rows={2}
+              error={Boolean(errors.version)}
+              helperText={errors.version?.message}
+            />
+          )}
+        />
+
+        <Controller
+          name="stepsToReproduce"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Steps to Reproduce"
+              fullWidth
+              sx={{ mb: 2 }}
+              multiline
+              rows={4}
+              error={Boolean(errors.stepsToReproduce)}
+              helperText={errors.stepsToReproduce?.message}
+            />
+          )}
+        />
+
+        <Controller
+          name="expectedResult"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Expected result"
+              fullWidth
+              sx={{ mb: 2 }}
+              multiline
+              rows={4}
+            />
+          )}
+        />
+
+        <Controller
+          name="actualResult"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Actual result"
+              fullWidth
+              sx={{ mb: 2 }}
+              multiline
+              rows={4}
+            />
+          )}
+        />
+
+        <Controller
+          name="workaround"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Workaround"
+              fullWidth
+              sx={{ mb: 2 }}
+              multiline
+              rows={4}
+            />
+          )}
+        />
+      </>
+      )}
         <Button type="submit" variant="contained" color="primary" sx={{ mr: 2 }}>
           {ticketId ? 'Save' : 'Create'}
         </Button>
